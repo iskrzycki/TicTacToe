@@ -33,7 +33,6 @@ function getClickedElement (x, y) {
 
 // Add element.
 elements.push({
-    colour: '#ccc',
     width: 100,
     height: 100,
     top: 0,
@@ -42,7 +41,6 @@ elements.push({
     isBlank: true
 });
 elements.push({
-    colour: '#ccc',
     width: 100,
     height: 100,
     top: 0,
@@ -51,7 +49,6 @@ elements.push({
     isBlank: true
 });
 elements.push({
-    colour: '#ccc',
     width: 100,
     height: 100,
     top: 0,
@@ -60,7 +57,6 @@ elements.push({
     isBlank: true
 });
 elements.push({
-    colour: '#ccc',
     width: 100,
     height: 100,
     top: 105,
@@ -69,7 +65,6 @@ elements.push({
     isBlank: true
 });
 elements.push({
-    colour: '#ccc',
     width: 100,
     height: 100,
     top: 105,
@@ -78,7 +73,6 @@ elements.push({
     isBlank: true
 });
 elements.push({
-    colour: '#ccc',
     width: 100,
     height: 100,
     top: 105,
@@ -87,7 +81,6 @@ elements.push({
     isBlank: true
 });
 elements.push({
-    colour: '#ccc',
     width: 100,
     height: 100,
     top: 210,
@@ -96,7 +89,6 @@ elements.push({
     isBlank: true
 });
 elements.push({
-    colour: '#ccc',
     width: 100,
     height: 100,
     top: 210,
@@ -105,7 +97,6 @@ elements.push({
     isBlank: true
 });
 elements.push({
-    colour: '#ccc',
     width: 100,
     height: 100,
     top: 210,
@@ -115,7 +106,7 @@ elements.push({
 });
 // Render elements.
 elements.forEach(function(element) {
-    context.fillStyle = element.colour;
+    context.fillStyle = '#f1f1f1';
     context.fillRect(element.left, element.top, element.width, element.height);
 });
 
