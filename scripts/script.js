@@ -13,11 +13,16 @@ var elem = document.getElementById('myCanvas'),
         },
         X_COLOR: '#ff0000',
         O_COLOR: '#00ff00'
-    }
+    };
+
+document.querySelector("#nameForm").addEventListener("submit", function(e) {
+    var input = document.getElementById('playerNameInput');
+    socket.emit('newPlayer', input.value);
+});
 
 elem.addEventListener('click', function(event) {
-    var x = event.pageX - elemBounding.left,
-        y = event.pageY - elemBounding.top;
+    var x = event.pageX - elemBounding.left;
+    var y = event.pageY - elemBounding.top;
 
     var selectedElem = getClickedElement(x, y);
     if (selectedElem) {

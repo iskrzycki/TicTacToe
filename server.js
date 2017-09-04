@@ -12,7 +12,7 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
 
-io.on('connection', function(socket){
+io.on('connection', function(socket) {
     console.log('user connected', socket.id);
 
     socket.on('draw', function(data, elem) {
@@ -22,7 +22,10 @@ io.on('connection', function(socket){
         } else if (data === 'x') {
             io.emit('draw', 'x', elem);
         }
-        io.emit('erase');
+    });
+
+    socket.on('newPlayer', function(name) {
+        console.log('New player: ', name);        
     });
 });
 
