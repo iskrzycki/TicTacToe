@@ -5,3 +5,11 @@
 canvas {
     background-color: white;
 }
+
+#board {
+	display: none;
+}
+
+.current-player {
+	color: #ccc;
+}
