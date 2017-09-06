@@ -46,7 +46,9 @@ socket.on('draw', function (data, elem) {
 });
 
 socket.on('winner', function () {
-    alert('somebody wins');
+    document.getElementById('winnerInfo').innerHTML = "SOMEBODY WON";
+    displayPlayers(true);
+    displayBoard(false);
     // todo: end game here
 });
 
@@ -64,12 +66,12 @@ socket.on('userCounter', function (count) {
 
 socket.on('startGame', function (data) {
     displayBoard(true);
-    document.getElementById('roomName').innerHTML = data.roomName;
+    displayPlayers(false);
+    document.getElementById('roomName').innerHTML = data.name;
     console.log('start game');
 });
 
 socket.on('symbol', function (data) {
-    console.log('Game started and my symbol is: ' + data.playerType);
     symbol = data.playerType;
 });
 
@@ -157,4 +159,9 @@ window.onbeforeunload = function() {
 function displayBoard (isVisible) {
     var displayStyle = isVisible ? 'block' : 'none';
     document.getElementById('board').style.display = displayStyle;
+}
+
+function displayPlayers (isVisible) {
+    var displayStyle = isVisible ? 'block' : 'none';
+    document.getElementById('players-panel').style.display = displayStyle;
 }

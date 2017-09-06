@@ -7,7 +7,7 @@ var port = 3000;
 
 var players = [];
 var allClients = [];
-var board;
+var rooms = [];
 
 app.use('/scripts', express.static(__dirname + '/scripts'));  
 app.use('/styles', express.static(__dirname + '/styles'));  
@@ -40,44 +40,65 @@ io.on('connection', function(socket) {
         });
         secondPlayerSocket[0].join(roomName);
 
-        var gameData = {
-            roomName: roomName
+        var room = {
+            name: roomName,
+            host: {
+                id: socket.id,
+                name: socket.playerName,
+                symbol: 'x',
+                canMove: true
+            },
+            guest: {
+                id: secondPlayerSocket[0].id,
+                name: secondPlayerSocket[0].playerName,
+                symbol: 'o',
+                canMove: false
+            },
+            board: ['0','1','2','3','4','5','6','7','8']
         };
 
-        socket.symbol = 'x';
-        secondPlayerSocket[0].symbol = 'o';
+        rooms.push(room);
+        socket.room = room;
+        secondPlayerSocket[0].room = room;
 
-        io.to(roomName).emit('startGame', gameData);
+        io.to(roomName).emit('startGame', room);
         io.to(socket.id).emit('symbol', {playerType:'x'});
         io.to(secondPlayerSocket[0].id).emit('symbol', {playerType:'o'});
-        // todo: replace it to array of boards
-        board = ['0','1','2','3','4','5','6','7','8'];
+        io.to(roomName).emit('switch turn', 'x');
     });
 
     socket.on('move', function(elem) {
-        // todo: check if it's player turn
-        io.emit('draw', socket.symbol, elem);
-        board[elem.id] = socket.symbol;
-        console.log('board', board);
+        var room = socket.room;
+        
+        // TODO: refactor
+        if (room.host.id === socket.id) {
+            io.emit('draw', room.host.symbol, elem);
+            room.board[elem.id] = room.host.symbol;
+            io.to(room.name).emit('switch turn', whosNext(room.host.symbol));
+        } else if (room.guest.id === socket.id) {
+            io.emit('draw', room.guest.symbol, elem);
+            room.board[elem.id] = room.guest.symbol;
+            io.to(room.name).emit('switch turn', whosNext(room.guest.symbol));
+        }
 
-        // should be emited only to room
-        // data should be kept in room object
-        io.emit('switch turn', whosNext(socket.symbol));
-        checkWinner();
+        console.log('board', room.board);
+        checkWinner(room);
     });
 
     function whosNext(symbol) {
         return symbol === 'x' ? 'o' : 'x';
     }
 
-    function checkWinner () {
+    function checkWinner (room) {
+        var board = room.board;
+
         var horizontal = checkIfEqual(board[0], board[1], board[2]) || checkIfEqual(board[3], board[4], board[5]) || checkIfEqual(board[6], board[7], board[8]);
         var vertical = checkIfEqual(board[0], board[3], board[6]) || checkIfEqual(board[1], board[4], board[7]) || checkIfEqual(board[2], board[5], board[8]);
         var cross = checkIfEqual(board[0], board[4], board[8]) || checkIfEqual(board[2], board[4], board[6]);
 
         if (horizontal || vertical || cross) {
             // todo: emit only to current players
-            io.emit('winner');
+            io.to(room.name).emit('winner');
         }
     }
 
@@ -105,14 +126,14 @@ server.listen(port, function() {
 });
 
 // TODO LIST - features
-// [] switching turn
-// [] hide players list when play
+// [X] switching turn
+// [X] hide players list when play
 // [] show only available players on the list
 // [] win algorythm fix
 // [] support multiple boards
 // [] leave room and end game when player disconnected
 
 // TODO LIST - refactor
-// [] divide server and cliento into separate files
+// [] divide server and client into separate files
 // [] do not pass whole html element through websocket
 // [] use react
