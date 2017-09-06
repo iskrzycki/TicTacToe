@@ -6,6 +6,7 @@ var elemBounding;
 var elements = [];
 var moveNumber = 0;
 var playerName;
+var symbol; // should not be here...
 
 var CONFIG = {
     BOARD: {
@@ -32,14 +33,6 @@ elem.addEventListener('click', function(event) {
     var selectedElem = getClickedElement(x, y);
     if (selectedElem) {
         socket.emit('move', selectedElem);
-        // moveNumber++;
-        // selectedElem.isBlank = false;
-
-        // if (moveNumber %2 == 0) {
-        //     socket.emit('draw', 'o', selectedElem);
-        // } else {
-        //     socket.emit('draw', 'x', selectedElem);
-        // }
     }
 
 }, false);
@@ -57,6 +50,14 @@ socket.on('winner', function () {
     // todo: end game here
 });
 
+socket.on('switch turn', function (data) {
+    if (symbol === data) {
+        elem.className = "touchable";
+    } else {
+        elem.className = "dont-touch";
+    }
+});
+
 socket.on('userCounter', function (count) {
     document.getElementById('userCounter').innerHTML = "users online: " + count;
 });
@@ -69,6 +70,7 @@ socket.on('startGame', function (data) {
 
 socket.on('symbol', function (data) {
     console.log('Game started and my symbol is: ' + data.playerType);
+    symbol = data.playerType;
 });
 
 socket.on('playerList', function (playerList) {

@@ -59,9 +59,16 @@ io.on('connection', function(socket) {
         io.emit('draw', socket.symbol, elem);
         board[elem.id] = socket.symbol;
         console.log('board', board);
-        // todo switch player turn
+
+        // should be emited only to room
+        // data should be kept in room object
+        io.emit('switch turn', whosNext(socket.symbol));
         checkWinner();
     });
+
+    function whosNext(symbol) {
+        return symbol === 'x' ? 'o' : 'x';
+    }
 
     function checkWinner () {
         var horizontal = checkIfEqual(board[0], board[1], board[2]) || checkIfEqual(board[3], board[4], board[5]) || checkIfEqual(board[6], board[7], board[8]);
