@@ -52,6 +52,11 @@ socket.on('draw', function (data, elem) {
     }
 });
 
+socket.on('winner', function () {
+    alert('somebody wins');
+    // todo: end game here
+});
+
 socket.on('userCounter', function (count) {
     document.getElementById('userCounter').innerHTML = "users online: " + count;
 });
