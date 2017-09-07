@@ -84,10 +84,17 @@ socket.on('playerList', function (playerList) {
 
     for (var i = 0, len = playerList.length; i < len ; i++) {
         var li = document.createElement("li");
-        li.appendChild(document.createTextNode(playerList[i]));
-        if (playerName !== playerList[i]) {
+        var text = playerList[i].name;
+
+        if (playerList[i].inGame === true) {
+            text += " - in game";
+        }
+
+        li.appendChild(document.createTextNode(text));
+        li.setAttribute("id", playerList[i].id);
+        if (playerName !== playerList[i].name || playerList[i].inGame === true) {
             li.addEventListener("click", function(e) {
-                socket.emit('createRoom', e.srcElement.innerHTML);
+                socket.emit('createRoom', e.srcElement.getAttribute("id"));
             }, false);
         } else {
             li.className += 'current-player';

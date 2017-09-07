@@ -24,53 +24,60 @@ io.on('connection', function(socket) {
     console.log('user count:', allClients.length);
 
     socket.on('newPlayer', function(name) {
-        socket.playerName = name;
-        console.log('New player: ', name);
-        players.push(name);
+        var player = {
+            name: name,
+            id: socket.id,
+            inGame: false
+        }
+        socket.player = player;
+        console.log('New player: ', player.name);
+        // consider changing it to players[id] = player;
+        players.push(player);
         io.emit('playerList', players);
     });
 
-    socket.on('createRoom', function(secondPlayerName) {
-        var roomName = socket.playerName + " vs " + secondPlayerName;
+    socket.on('createRoom', function(secondPlayerId) {
+        var secondPlayerSocket = io.sockets.sockets[secondPlayerId];
+        var roomName = socket.player.name + " vs " + secondPlayerSocket.player.name;
         console.log('creating room', roomName);
-        
+
         socket.join(roomName);
-        var secondPlayerSocket = allClients.filter(function(obj) {
-            return obj.playerName === secondPlayerName;
-        });
-        secondPlayerSocket[0].join(roomName);
+        secondPlayerSocket.join(roomName);
 
         var room = {
             name: roomName,
             host: {
                 id: socket.id,
-                name: socket.playerName,
+                name: socket.player.name,
                 symbol: 'x',
                 canMove: true
             },
             guest: {
-                id: secondPlayerSocket[0].id,
-                name: secondPlayerSocket[0].playerName,
+                id: secondPlayerSocket.id,
+                name: secondPlayerSocket.player.name,
                 symbol: 'o',
                 canMove: false
             },
             board: ['0','1','2','3','4','5','6','7','8']
         };
 
+        socket.player.inGame = true;
+        secondPlayerSocket.player.inGame = true;
+
         rooms.push(room);
         socket.room = room;
-        secondPlayerSocket[0].room = room;
+        secondPlayerSocket.room = room;
 
         io.to(roomName).emit('startGame', room);
         io.to(socket.id).emit('symbol', {playerType:'x'});
-        io.to(secondPlayerSocket[0].id).emit('symbol', {playerType:'o'});
+        io.to(secondPlayerSocket.id).emit('symbol', {playerType:'o'});
         io.to(roomName).emit('switch turn', 'x');
+        io.emit('playerList', players);
     });
 
     socket.on('move', function(elem) {
         var room = socket.room;
         
-        // TODO: refactor
         if (room.host.id === socket.id) {
             io.emit('draw', room.host.symbol, elem);
             room.board[elem.id] = room.host.symbol;
@@ -97,8 +104,14 @@ io.on('connection', function(socket) {
         var cross = checkIfEqual(board[0], board[4], board[8]) || checkIfEqual(board[2], board[4], board[6]);
 
         if (horizontal || vertical || cross) {
-            // todo: emit only to current players
             io.to(room.name).emit('winner');
+
+            // todo: FIX IT
+            room.host.inGame = false;
+            room.guest.inGame = false;
+            // TODO: room ended
+            // TODO: players[id].inGame = false
+            io.emit('playerList', players);
         }
     }
 
@@ -107,13 +120,14 @@ io.on('connection', function(socket) {
     }
 
     socket.on('disconnect', function() {
-        var i = allClients.indexOf(socket);
-        var j = players.indexOf(allClients[i].playerName);
-        allClients.splice(i, 1);
-        if (j > -1) {
-            players.splice(j, 1);    
-        }
+        allClients.splice(allClients.indexOf(socket), 1);
         
+        for(var j = players.length - 1; j >= 0; j--) {
+            if (players[j].id === socket.id) {
+                players.splice(j, 1);
+            }
+        }
+
         io.emit('playerList', players);
         io.emit('userCounter', allClients.length);
         console.log('user count:', allClients.length);
