@@ -7,19 +7,23 @@ canvas {
 }
 
 #board {
-	display: none;
+    display: none;
 }
 
-.current-player {
-	color: #ccc;
+.disable-player {
+    color: #ccc;
 }
 
 .dont-touch {
-	pointer-events: none;
-	cursor: no-drop;
+    pointer-events: none;
+    cursor: no-drop;
 }
 
 .touchable {
-	pointer-events: auto;
-	cursor: pointer;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+#players-panel {
+    display: none;
 }

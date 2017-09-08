@@ -5,8 +5,8 @@ var server = http.createServer(app);
 var io = require('socket.io').listen(server);
 var port = 3000;
 
-var players = [];
-var allClients = [];
+var players = {};
+var allClients = {}
 var rooms = [];
 
 app.use('/scripts', express.static(__dirname + '/scripts'));  
@@ -17,6 +17,7 @@ app.get('/', function(req, res) {
 });
 
 io.on('connection', function(socket) {
+    // todo: fix it to allClients[id] = ...
     allClients.push(socket);
     io.emit('userCounter', allClients.length);
     io.emit('playerList', players);
@@ -32,7 +33,11 @@ io.on('connection', function(socket) {
         socket.player = player;
         console.log('New player: ', player.name);
         // consider changing it to players[id] = player;
-        players.push(player);
+        //players.push(player);
+        players[socket.id] = player;
+        console.log('players len: ', players);
+
+        // TODO: validate player name
         io.emit('playerList', players);
     });
 
@@ -107,10 +112,12 @@ io.on('connection', function(socket) {
             io.to(room.name).emit('winner');
 
             // todo: FIX IT
-            room.host.inGame = false;
-            room.guest.inGame = false;
+            // room.host.inGame = false;
+            // room.guest.inGame = false;
             // TODO: room ended
             // TODO: players[id].inGame = false
+            players[room.host.id].inGame = false;
+            players[room.guest.id].inGame = false;
             io.emit('playerList', players);
         }
     }
@@ -121,12 +128,7 @@ io.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
         allClients.splice(allClients.indexOf(socket), 1);
-        
-        for(var j = players.length - 1; j >= 0; j--) {
-            if (players[j].id === socket.id) {
-                players.splice(j, 1);
-            }
-        }
+        delete players[socket.id];
 
         io.emit('playerList', players);
         io.emit('userCounter', allClients.length);
@@ -146,6 +148,7 @@ server.listen(port, function() {
 // [] win algorythm fix
 // [] support multiple boards
 // [] leave room and end game when player disconnected
+// [] player name validation 
 
 // TODO LIST - refactor
 // [] divide server and client into separate files

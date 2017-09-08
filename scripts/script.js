@@ -23,6 +23,7 @@ document.querySelector("#nameForm").addEventListener("submit", function(e) {
     socket.emit('newPlayer', input.value);
     playerName = input.value;
     document.getElementById('nameForm').remove();
+    displayPlayers(true);
 });
 
 elem.addEventListener('click', function(event) {
@@ -82,25 +83,47 @@ socket.on('playerList', function (playerList) {
         ul.removeChild(ul.firstChild);
     }
 
-    for (var i = 0, len = playerList.length; i < len ; i++) {
-        var li = document.createElement("li");
-        var text = playerList[i].name;
+    for (var property in playerList) {
+        if (playerList.hasOwnProperty(property)) {
+            var li = document.createElement("li");
+            var text = playerList[property].name;
 
-        if (playerList[i].inGame === true) {
-            text += " - in game";
-        }
+            if (playerList[property].inGame === true) {
+                text += " - in game";
+            }
 
-        li.appendChild(document.createTextNode(text));
-        li.setAttribute("id", playerList[i].id);
-        if (playerName !== playerList[i].name || playerList[i].inGame === true) {
-            li.addEventListener("click", function(e) {
-                socket.emit('createRoom', e.srcElement.getAttribute("id"));
-            }, false);
-        } else {
-            li.className += 'current-player';
+            li.appendChild(document.createTextNode(text));
+            li.setAttribute("id", playerList[property].id);
+            if (playerName !== playerList[property].name && playerList[property].inGame === false) {
+                li.addEventListener("click", function(e) {
+                    socket.emit('createRoom', e.srcElement.getAttribute("id"));
+                }, false);
+            } else {
+                li.className += 'disable-player';
+            }
+            ul.appendChild(li);
         }
-        ul.appendChild(li);
     }
+
+    // for (var i = 0, len = playerList.length; i < len ; i++) {
+    //     var li = document.createElement("li");
+    //     var text = playerList[i].name;
+
+    //     if (playerList[i].inGame === true) {
+    //         text += " - in game";
+    //     }
+
+    //     li.appendChild(document.createTextNode(text));
+    //     li.setAttribute("id", playerList[i].id);
+    //     if (playerName !== playerList[i].name || playerList[i].inGame === true) {
+    //         li.addEventListener("click", function(e) {
+    //             socket.emit('createRoom', e.srcElement.getAttribute("id"));
+    //         }, false);
+    //     } else {
+    //         li.className += 'disable-player';
+    //     }
+    //     ul.appendChild(li);
+    // }
 });
 
 function getClickedElement (x, y) {
