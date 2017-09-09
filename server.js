@@ -6,23 +6,23 @@ var io = require('socket.io').listen(server);
 var port = 3000;
 
 var players = {};
-var allClients = {}
+var allClients = {};
 var rooms = [];
 
-app.use('/scripts', express.static(__dirname + '/scripts'));  
-app.use('/styles', express.static(__dirname + '/styles'));  
+app.use('/scripts', express.static(__dirname + '/scripts'));
+app.use('/styles', express.static(__dirname + '/styles'));
 
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
 io.on('connection', function(socket) {
-    // todo: fix it to allClients[id] = ...
-    allClients.push(socket);
-    io.emit('userCounter', allClients.length);
+    allClients[socket.id] = socket;
+
+    io.emit('userCounter', Object.keys(allClients).length);
     io.emit('playerList', players);
     console.log('user connected', socket.id);
-    console.log('user count:', allClients.length);
+    console.log('user count:', Object.keys(allClients).length);
 
     socket.on('newPlayer', function(name) {
         var player = {
@@ -32,10 +32,7 @@ io.on('connection', function(socket) {
         }
         socket.player = player;
         console.log('New player: ', player.name);
-        // consider changing it to players[id] = player;
-        //players.push(player);
         players[socket.id] = player;
-        console.log('players len: ', players);
 
         // TODO: validate player name
         io.emit('playerList', players);
@@ -69,14 +66,16 @@ io.on('connection', function(socket) {
         socket.player.inGame = true;
         secondPlayerSocket.player.inGame = true;
 
+        // todo: is it necessary?
         rooms.push(room);
         socket.room = room;
         secondPlayerSocket.room = room;
 
         io.to(roomName).emit('startGame', room);
-        io.to(socket.id).emit('symbol', {playerType:'x'});
-        io.to(secondPlayerSocket.id).emit('symbol', {playerType:'o'});
+        io.to(socket.id).emit('symbol', 'x'});
+        io.to(secondPlayerSocket.id).emit('symbol', 'o');
         io.to(roomName).emit('switch turn', 'x');
+        // todo: consider dividing above emit into two single emits
         io.emit('playerList', players);
     });
 
@@ -84,11 +83,11 @@ io.on('connection', function(socket) {
         var room = socket.room;
         
         if (room.host.id === socket.id) {
-            io.emit('draw', room.host.symbol, elem);
+            io.to(room.name).emit('draw', room.host.symbol, elem);
             room.board[elem.id] = room.host.symbol;
             io.to(room.name).emit('switch turn', whosNext(room.host.symbol));
         } else if (room.guest.id === socket.id) {
-            io.emit('draw', room.guest.symbol, elem);
+            io.to(room.name).emit('draw', room.guest.symbol, elem);
             room.board[elem.id] = room.guest.symbol;
             io.to(room.name).emit('switch turn', whosNext(room.guest.symbol));
         }
@@ -111,11 +110,7 @@ io.on('connection', function(socket) {
         if (horizontal || vertical || cross) {
             io.to(room.name).emit('winner');
 
-            // todo: FIX IT
-            // room.host.inGame = false;
-            // room.guest.inGame = false;
-            // TODO: room ended
-            // TODO: players[id].inGame = false
+            // TODO: remove romm from array
             players[room.host.id].inGame = false;
             players[room.guest.id].inGame = false;
             io.emit('playerList', players);
@@ -127,13 +122,14 @@ io.on('connection', function(socket) {
     }
 
     socket.on('disconnect', function() {
-        allClients.splice(allClients.indexOf(socket), 1);
         delete players[socket.id];
+        delete allClients[socket.id];
 
+        // todo: check if player was playing with someone
         io.emit('playerList', players);
-        io.emit('userCounter', allClients.length);
-        console.log('user count:', allClients.length);
-        console.log('player count:', players.length);
+        io.emit('userCounter', Object.keys(allClients).length);
+        console.log('user count:', Object.keys(allClients).length);
+        console.log('player count:', Object.keys(players).length);
     });
 });
 
@@ -144,11 +140,12 @@ server.listen(port, function() {
 // TODO LIST - features
 // [X] switching turn
 // [X] hide players list when play
-// [] show only available players on the list
+// [X] show only available players on the list
 // [] win algorythm fix
-// [] support multiple boards
+// [?] support multiple boards
 // [] leave room and end game when player disconnected
-// [] player name validation 
+// [] player name validation
+// [] store game stats in file or DB
 
 // TODO LIST - refactor
 // [] divide server and client into separate files

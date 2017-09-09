@@ -50,7 +50,7 @@ socket.on('winner', function () {
     document.getElementById('winnerInfo').innerHTML = "SOMEBODY WON";
     displayPlayers(true);
     displayBoard(false);
-    // todo: end game here
+    drawBoard();
 });
 
 socket.on('switch turn', function (data) {
@@ -66,6 +66,7 @@ socket.on('userCounter', function (count) {
 });
 
 socket.on('startGame', function (data) {
+    document.getElementById('winnerInfo').innerHTML = "";
     displayBoard(true);
     displayPlayers(false);
     document.getElementById('roomName').innerHTML = data.name;
@@ -73,7 +74,7 @@ socket.on('startGame', function (data) {
 });
 
 socket.on('symbol', function (data) {
-    symbol = data.playerType;
+    symbol = data;
 });
 
 socket.on('playerList', function (playerList) {
@@ -104,26 +105,6 @@ socket.on('playerList', function (playerList) {
             ul.appendChild(li);
         }
     }
-
-    // for (var i = 0, len = playerList.length; i < len ; i++) {
-    //     var li = document.createElement("li");
-    //     var text = playerList[i].name;
-
-    //     if (playerList[i].inGame === true) {
-    //         text += " - in game";
-    //     }
-
-    //     li.appendChild(document.createTextNode(text));
-    //     li.setAttribute("id", playerList[i].id);
-    //     if (playerName !== playerList[i].name || playerList[i].inGame === true) {
-    //         li.addEventListener("click", function(e) {
-    //             socket.emit('createRoom', e.srcElement.getAttribute("id"));
-    //         }, false);
-    //     } else {
-    //         li.className += 'disable-player';
-    //     }
-    //     ul.appendChild(li);
-    // }
 });
 
 function getClickedElement (x, y) {
@@ -145,11 +126,14 @@ elements.push({top: 210, left: 0, id: 6, isBlank: true});
 elements.push({top: 210, left: 105, id: 7, isBlank: true});
 elements.push({top: 210, left: 210, id: 8, isBlank: true});
 
-// Render elements.
-elements.forEach(function(element) {
-    context.fillStyle = CONFIG.BOARD.TILE_COLOR;
-    context.fillRect(element.left, element.top, CONFIG.BOARD.TILE_SIZE, CONFIG.BOARD.TILE_SIZE);
-});
+function drawBoard() {
+    elements.forEach(function(element) {
+        context.fillStyle = CONFIG.BOARD.TILE_COLOR;
+        context.fillRect(element.left, element.top, CONFIG.BOARD.TILE_SIZE, CONFIG.BOARD.TILE_SIZE);
+    });
+}
+
+drawBoard();
 
 function drawCircle(element) {
     var radius = CONFIG.BOARD.TILE_SIZE / 3;
