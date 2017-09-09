@@ -7,7 +7,6 @@ var port = 3000;
 
 var players = {};
 var allClients = {};
-var rooms = [];
 
 app.use('/scripts', express.static(__dirname + '/scripts'));
 app.use('/styles', express.static(__dirname + '/styles'));
@@ -66,39 +65,42 @@ io.on('connection', function(socket) {
         socket.player.inGame = true;
         secondPlayerSocket.player.inGame = true;
 
-        // todo: is it necessary?
-        rooms.push(room);
         socket.room = room;
         secondPlayerSocket.room = room;
 
         io.to(roomName).emit('startGame', room);
-        io.to(socket.id).emit('symbol', 'x'});
-        io.to(secondPlayerSocket.id).emit('symbol', 'o');
-        io.to(roomName).emit('switch turn', 'x');
-        // todo: consider dividing above emit into two single emits
+
+        io.to(socket.id).emit('switch turn', true);
+        io.to(secondPlayerSocket.id).emit('switch turn', false);
         io.emit('playerList', players);
     });
 
     socket.on('move', function(elem) {
-        var room = socket.room;
-        
-        if (room.host.id === socket.id) {
-            io.to(room.name).emit('draw', room.host.symbol, elem);
-            room.board[elem.id] = room.host.symbol;
-            io.to(room.name).emit('switch turn', whosNext(room.host.symbol));
-        } else if (room.guest.id === socket.id) {
-            io.to(room.name).emit('draw', room.guest.symbol, elem);
-            room.board[elem.id] = room.guest.symbol;
-            io.to(room.name).emit('switch turn', whosNext(room.guest.symbol));
+        var currentPlayer;
+        var opponent;
+
+        if (socket.room.host.id === socket.id) {
+            currentPlayer = socket.room.host;
+            opponent = socket.room.guest;
+        } else if (socket.room.guest.id === socket.id) {
+            currentPlayer = socket.room.guest;
+            opponent = socket.room.host;
         }
 
-        console.log('board', room.board);
-        checkWinner(room);
-    });
+        if (currentPlayer.canMove) {
+            currentPlayer.canMove = false;
+            opponent.canMove = true;
 
-    function whosNext(symbol) {
-        return symbol === 'x' ? 'o' : 'x';
-    }
+            socket.room.board[elem.id] = currentPlayer.symbol;
+
+            io.to(socket.room.name).emit('draw', currentPlayer.symbol, elem);
+            io.to(currentPlayer.id).emit('switch turn', currentPlayer.canMove);
+            io.to(opponent.id).emit('switch turn', opponent.canMove);
+        }
+
+        console.log('board', socket.room.board);
+        checkWinner(socket.room);
+    });
 
     function checkWinner (room) {
         var board = room.board;
@@ -110,7 +112,7 @@ io.on('connection', function(socket) {
         if (horizontal || vertical || cross) {
             io.to(room.name).emit('winner');
 
-            // TODO: remove romm from array
+            // TODO: remove room from array
             players[room.host.id].inGame = false;
             players[room.guest.id].inGame = false;
             io.emit('playerList', players);

@@ -6,7 +6,6 @@ var elemBounding;
 var elements = [];
 var moveNumber = 0;
 var playerName;
-var symbol; // should not be here...
 
 var CONFIG = {
     BOARD: {
@@ -54,7 +53,7 @@ socket.on('winner', function () {
 });
 
 socket.on('switch turn', function (data) {
-    if (symbol === data) {
+    if (data === true) {
         elem.className = "touchable";
     } else {
         elem.className = "dont-touch";
@@ -71,10 +70,6 @@ socket.on('startGame', function (data) {
     displayPlayers(false);
     document.getElementById('roomName').innerHTML = data.name;
     console.log('start game');
-});
-
-socket.on('symbol', function (data) {
-    symbol = data;
 });
 
 socket.on('playerList', function (playerList) {
