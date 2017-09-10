@@ -32,24 +32,32 @@ elem.addEventListener('click', function(event) {
 
     var selectedElem = getClickedElement(x, y);
     if (selectedElem) {
-        socket.emit('move', selectedElem);
+        socket.emit('move', selectedElem.id);
     }
 
 }, false);
 
-socket.on('draw', function (data, elem) {
+socket.on('draw', function (data, destinationId) {
     if (data === 'x') {
-        drawX(elem);
+        drawX(destinationId);
     } else if (data === 'o') {
-        drawCircle(elem);
+        drawCircle(destinationId);
     }
 });
 
-socket.on('winner', function () {
-    document.getElementById('winnerInfo').innerHTML = "SOMEBODY WON";
+socket.on('winner', function (wonSymbol) {
+    document.getElementById('winnerInfo').innerHTML = wonSymbol + " WON";
     displayPlayers(true);
     displayBoard(false);
     drawBoard();
+});
+
+socket.on('win', function (youWon) {
+    if (youWon) {
+        alert('You won!');
+    } else {
+        alert('You loose');
+    }
 });
 
 socket.on('switch turn', function (data) {
@@ -130,7 +138,8 @@ function drawBoard() {
 
 drawBoard();
 
-function drawCircle(element) {
+function drawCircle(id) {
+    var element = getGameElementById(id);
     var radius = CONFIG.BOARD.TILE_SIZE / 3;
     var x = element.left + CONFIG.BOARD.TILE_SIZE / 2;
     var y = element.top + CONFIG.BOARD.TILE_SIZE / 2;
@@ -144,7 +153,8 @@ function drawCircle(element) {
     context.closePath();
 }
 
-function drawX(element) {
+function drawX(id) {
+    var element = getGameElementById(id);
     var offset = 20;
 
     context.beginPath();
@@ -173,4 +183,10 @@ function displayBoard (isVisible) {
 function displayPlayers (isVisible) {
     var displayStyle = isVisible ? 'block' : 'none';
     document.getElementById('players-panel').style.display = displayStyle;
+}
+
+function getGameElementById (id) {
+    return elements.filter(function (elem) {
+        return elem.id === id;
+    })[0];
 }

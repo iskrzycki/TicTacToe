@@ -68,14 +68,14 @@ io.on('connection', function(socket) {
         socket.room = room;
         secondPlayerSocket.room = room;
 
-        io.to(roomName).emit('startGame', room);
+        io.to(roomName).emit('startGame');
 
         io.to(socket.id).emit('switch turn', true);
         io.to(secondPlayerSocket.id).emit('switch turn', false);
         io.emit('playerList', players);
     });
 
-    socket.on('move', function(elem) {
+    socket.on('move', function (destinationId) {
         var currentPlayer;
         var opponent;
 
@@ -87,47 +87,53 @@ io.on('connection', function(socket) {
             opponent = socket.room.host;
         }
 
-        if (currentPlayer.canMove) {
+        if (currentPlayer.canMove && socket.room.board[destinationId] !== 'x' && socket.room.board[destinationId] !== 'o') {
             currentPlayer.canMove = false;
             opponent.canMove = true;
 
-            socket.room.board[elem.id] = currentPlayer.symbol;
+            socket.room.board[destinationId] = currentPlayer.symbol;
 
-            io.to(socket.room.name).emit('draw', currentPlayer.symbol, elem);
-            io.to(currentPlayer.id).emit('switch turn', currentPlayer.canMove);
-            io.to(opponent.id).emit('switch turn', opponent.canMove);
+            io.to(socket.room.name).emit('draw', currentPlayer.symbol, destinationId);
+
+            console.log('board', socket.room.board);
+            var somebodyWon = checkWinner(socket.room.board, currentPlayer.symbol);
+
+            if (somebodyWon) {
+                io.to(socket.room.name).emit('winner', currentPlayer.symbol);
+                io.to(currentPlayer.id).emit('win', true);
+                io.to(opponent.id).emit('win', false);
+
+                players[socket.room.host.id].inGame = false;
+                players[socket.room.guest.id].inGame = false;
+                io.emit('playerList', players);
+
+                // leaving game room
+                allClients[socket.room.host.id].leave(socket.room.name);
+                allClients[socket.room.guest.id].leave(socket.room.name);
+            } else {
+                io.to(currentPlayer.id).emit('switch turn', currentPlayer.canMove);
+                io.to(opponent.id).emit('switch turn', opponent.canMove);
+            }
         }
-
-        console.log('board', socket.room.board);
-        checkWinner(socket.room);
     });
 
-    function checkWinner (room) {
-        var board = room.board;
+    function checkWinner (board, symbol) {
+        var horizontal = checkIfEqual(board[0], board[1], board[2], symbol) || checkIfEqual(board[3], board[4], board[5], symbol) || checkIfEqual(board[6], board[7], board[8], symbol);
+        var vertical = checkIfEqual(board[0], board[3], board[6], symbol) || checkIfEqual(board[1], board[4], board[7], symbol) || checkIfEqual(board[2], board[5], board[8], symbol);
+        var cross = checkIfEqual(board[0], board[4], board[8], symbol) || checkIfEqual(board[2], board[4], board[6], symbol);
 
-        var horizontal = checkIfEqual(board[0], board[1], board[2]) || checkIfEqual(board[3], board[4], board[5]) || checkIfEqual(board[6], board[7], board[8]);
-        var vertical = checkIfEqual(board[0], board[3], board[6]) || checkIfEqual(board[1], board[4], board[7]) || checkIfEqual(board[2], board[5], board[8]);
-        var cross = checkIfEqual(board[0], board[4], board[8]) || checkIfEqual(board[2], board[4], board[6]);
-
-        if (horizontal || vertical || cross) {
-            io.to(room.name).emit('winner');
-
-            // TODO: remove room from array
-            players[room.host.id].inGame = false;
-            players[room.guest.id].inGame = false;
-            io.emit('playerList', players);
-        }
+        return horizontal || vertical || cross;
     }
 
-    function checkIfEqual(a, b, c) {
-        return a === b && a === c;
+    function checkIfEqual(a, b, c, symbol) {
+        return a === b && a === c && a === symbol;
     }
 
     socket.on('disconnect', function() {
         delete players[socket.id];
         delete allClients[socket.id];
 
-        // todo: check if player was playing with someone
+        // todo: check if player was playing with someone and emit to opponent message about that
         io.emit('playerList', players);
         io.emit('userCounter', Object.keys(allClients).length);
         console.log('user count:', Object.keys(allClients).length);
@@ -143,7 +149,7 @@ server.listen(port, function() {
 // [X] switching turn
 // [X] hide players list when play
 // [X] show only available players on the list
-// [] win algorythm fix
+// [X] win algorythm fix
 // [?] support multiple boards
 // [] leave room and end game when player disconnected
 // [] player name validation
@@ -151,5 +157,5 @@ server.listen(port, function() {
 
 // TODO LIST - refactor
 // [] divide server and client into separate files
-// [] do not pass whole html element through websocket
+// [X] do not pass whole html element through websocket
 // [] use react
