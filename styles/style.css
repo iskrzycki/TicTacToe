@@ -27,3 +27,7 @@ canvas {
 .list-group-item:hover {
     background-color: #428bca;
 }
+
+#errorMessage {
+	display: none;
+}

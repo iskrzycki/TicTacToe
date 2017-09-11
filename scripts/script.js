@@ -17,6 +17,7 @@ var CONFIG = {
 };
 
 document.querySelector("#nameForm").addEventListener("submit", function(e) {
+    // TODO: display players only if no error
     e.preventDefault();
     var input = document.getElementById('playerNameInput');
     socket.emit('newPlayer', input.value);
@@ -76,6 +77,10 @@ socket.on('switch turn', function (data) {
 
 socket.on('userCounter', function (count) {
     document.getElementById('userCounter').innerHTML = "users online: " + count;
+});
+
+socket.on('error', function (message) {
+    displayErrorMessage(message);
 });
 
 socket.on('startGame', function (roomName) {
@@ -184,6 +189,11 @@ function drawX(id) {
 window.onbeforeunload = function() {
     // TODO: Uncomment on prod
     //return "Do you really want to refresh page? You'll be logged out.";
+}
+
+function displayErrorMessage (message) {
+    document.getElementById('errorMessage').style.display = 'block';
+    document.getElementById('errorMessage').innerHTML = message;
 }
 
 function displayBoard (isVisible) {

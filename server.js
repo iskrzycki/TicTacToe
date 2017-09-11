@@ -24,17 +24,20 @@ io.on('connection', function (socket) {
     console.log('user count:', Object.keys(allClients).length);
 
     socket.on('newPlayer', function (name) {
-        var player = {
-            name: name,
-            id: socket.id,
-            inGame: false
-        }
-        socket.player = player;
-        console.log('New player: ', player.name);
-        players[socket.id] = player;
 
-        // TODO: validate player name
-        io.emit('playerList', players);
+        if (validateUserName(name)) {
+            var player = {
+                name: name,
+                id: socket.id,
+                inGame: false
+            }
+            socket.player = player;
+            console.log('New player: ', player.name);
+            players[socket.id] = player;
+            io.emit('playerList', players);
+        } else {
+            io.to(socket.id).emit('error', 'Invalid username');
+        }
     });
 
     socket.on('createRoom', function (secondPlayerId) {
@@ -88,7 +91,6 @@ io.on('connection', function (socket) {
         }
 
         if (currentPlayer.canMove && socket.room.board[destinationId] !== 'x' && socket.room.board[destinationId] !== 'o') {
-            console.log('__canMove');
             currentPlayer.canMove = false;
             opponent.canMove = true;
 
@@ -153,6 +155,20 @@ server.listen(port, function () {
     console.log('Listening on port', port);
 });
 
+function validateUserName (userName) {
+    if (userName.length === 0) {
+        return false;
+    }
+    for (var player in players) {
+        if (players.hasOwnProperty(player)) {
+            if (players[player].name === userName) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 // TODO LIST - features
 // [X] switching turn
 // [X] hide players list when play
@@ -161,7 +177,7 @@ server.listen(port, function () {
 // [X] draw support
 // [?] support multiple boards
 // [] leave room and end game when player disconnected
-// [] player name validation
+// [?] player name validation (needs to be handled on ui side also)
 // [] store game stats in file or DB
 
 // TODO LIST - refactor
