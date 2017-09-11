@@ -10,10 +10,6 @@ canvas {
     display: none;
 }
 
-.disable-player {
-    color: #ccc;
-}
-
 .dont-touch {
     pointer-events: none;
     cursor: no-drop;
@@ -26,4 +22,8 @@ canvas {
 
 #players-panel {
     display: none;
+}
+
+.list-group-item:hover {
+    background-color: #428bca;
 }

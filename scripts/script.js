@@ -34,10 +34,9 @@ elem.addEventListener('click', function(event) {
     if (selectedElem) {
         socket.emit('move', selectedElem.id);
     }
-
 }, false);
 
-socket.on('draw', function (data, destinationId) {
+socket.on('draw symbol', function (data, destinationId) {
     if (data === 'x') {
         drawX(destinationId);
     } else if (data === 'o') {
@@ -47,6 +46,13 @@ socket.on('draw', function (data, destinationId) {
 
 socket.on('winner', function (wonSymbol) {
     document.getElementById('winnerInfo').innerHTML = wonSymbol + " WON";
+    displayPlayers(true);
+    displayBoard(false);
+    drawBoard();
+});
+
+socket.on('draw', function () {
+    document.getElementById('winnerInfo').innerHTML = "DRAW";
     displayPlayers(true);
     displayBoard(false);
     drawBoard();
@@ -72,11 +78,11 @@ socket.on('userCounter', function (count) {
     document.getElementById('userCounter').innerHTML = "users online: " + count;
 });
 
-socket.on('startGame', function (data) {
+socket.on('startGame', function (roomName) {
     document.getElementById('winnerInfo').innerHTML = "";
     displayBoard(true);
     displayPlayers(false);
-    document.getElementById('roomName').innerHTML = data.name;
+    document.getElementById('roomName').innerHTML = roomName;
     console.log('start game');
 });
 
@@ -98,12 +104,14 @@ socket.on('playerList', function (playerList) {
 
             li.appendChild(document.createTextNode(text));
             li.setAttribute("id", playerList[property].id);
+            li.className = 'list-group-item touchable';
+
             if (playerName !== playerList[property].name && playerList[property].inGame === false) {
                 li.addEventListener("click", function(e) {
                     socket.emit('createRoom', e.srcElement.getAttribute("id"));
                 }, false);
             } else {
-                li.className += 'disable-player';
+                li.className += ' disabled';
             }
             ul.appendChild(li);
         }
@@ -131,6 +139,7 @@ elements.push({top: 210, left: 210, id: 8, isBlank: true});
 
 function drawBoard() {
     elements.forEach(function(element) {
+        element.isBlank = true;
         context.fillStyle = CONFIG.BOARD.TILE_COLOR;
         context.fillRect(element.left, element.top, CONFIG.BOARD.TILE_SIZE, CONFIG.BOARD.TILE_SIZE);
     });
@@ -144,6 +153,7 @@ function drawCircle(id) {
     var x = element.left + CONFIG.BOARD.TILE_SIZE / 2;
     var y = element.top + CONFIG.BOARD.TILE_SIZE / 2;
 
+    element.isBlank = false;
     context.strokeStyle = CONFIG.O_COLOR;
     context.beginPath();
     context.arc(x, y, radius, 0, 2*Math.PI);
@@ -157,6 +167,7 @@ function drawX(id) {
     var element = getGameElementById(id);
     var offset = 20;
 
+    element.isBlank = false;
     context.beginPath();
     context.moveTo(element.left + offset, element.top + offset);
     context.lineTo(element.left + CONFIG.BOARD.TILE_SIZE - offset, element.top + CONFIG.BOARD.TILE_SIZE - offset);

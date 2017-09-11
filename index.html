@@ -1,7 +1,5 @@
 <HTML>
-
 <BODY>
-    
     <link rel="stylesheet" href="styles/vendor/bootstrap.min.css">
     <link rel="stylesheet" href="styles/style.css">
     <script src="scripts/vendor/socket.io.js"></script>
@@ -18,32 +16,30 @@
                         <label for="playerNameInput">Player name</label>
                         <input type="text" class="form-control" id="playerNameInput" placeholder="Enter name">
                     </div>
-                        <button type="submit" class="btn btn-primary">Play</button>
+                    <button type="submit" class="btn btn-primary">Play</button>
                 </form>
             </div>
             <div class="col-md-4"></div>
         </div>
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-5">
             </div>
-            <div class="col-md-4 text-center">
-            <span id="winnerInfo"></span>
+            <div class="col-md-5 text-center">
+                <span id="winnerInfo"></span>
                 <div id="board">
                     <span id="roomName"></span>
                     <canvas id="myCanvas" width="310" height="310" class="touchable"></canvas>
                 </div>
             </div>
-            <div id="players-panel" class="col-md-4">
-                <h2>Players</h2>
-                <ul id="player-list"></ul>
+            <div id="players-panel" class="col-md-2">
+                <h2>Player</h2>
+                <ul class="list-group" id="player-list"></ul>
             </div>
         </div>
         <div class="navbar navbar-fixed-bottom">
             <span class="text-muted" id="userCounter"></span>
         </div>
     </div>
-
     <script src="scripts/script.js"></script>
 </BODY>
-
 </HTML>

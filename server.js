@@ -11,11 +11,11 @@ var allClients = {};
 app.use('/scripts', express.static(__dirname + '/scripts'));
 app.use('/styles', express.static(__dirname + '/styles'));
 
-app.get('/', function(req, res) {
+app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
-io.on('connection', function(socket) {
+io.on('connection', function (socket) {
     allClients[socket.id] = socket;
 
     io.emit('userCounter', Object.keys(allClients).length);
@@ -23,7 +23,7 @@ io.on('connection', function(socket) {
     console.log('user connected', socket.id);
     console.log('user count:', Object.keys(allClients).length);
 
-    socket.on('newPlayer', function(name) {
+    socket.on('newPlayer', function (name) {
         var player = {
             name: name,
             id: socket.id,
@@ -37,7 +37,7 @@ io.on('connection', function(socket) {
         io.emit('playerList', players);
     });
 
-    socket.on('createRoom', function(secondPlayerId) {
+    socket.on('createRoom', function (secondPlayerId) {
         var secondPlayerSocket = io.sockets.sockets[secondPlayerId];
         var roomName = socket.player.name + " vs " + secondPlayerSocket.player.name;
         console.log('creating room', roomName);
@@ -59,7 +59,7 @@ io.on('connection', function(socket) {
                 symbol: 'o',
                 canMove: false
             },
-            board: ['0','1','2','3','4','5','6','7','8']
+            board: ['','','','','','','','','']
         };
 
         socket.player.inGame = true;
@@ -68,7 +68,7 @@ io.on('connection', function(socket) {
         socket.room = room;
         secondPlayerSocket.room = room;
 
-        io.to(roomName).emit('startGame');
+        io.to(roomName).emit('startGame', roomName);
 
         io.to(socket.id).emit('switch turn', true);
         io.to(secondPlayerSocket.id).emit('switch turn', false);
@@ -88,17 +88,14 @@ io.on('connection', function(socket) {
         }
 
         if (currentPlayer.canMove && socket.room.board[destinationId] !== 'x' && socket.room.board[destinationId] !== 'o') {
+            console.log('__canMove');
             currentPlayer.canMove = false;
             opponent.canMove = true;
 
             socket.room.board[destinationId] = currentPlayer.symbol;
+            io.to(socket.room.name).emit('draw symbol', currentPlayer.symbol, destinationId);
 
-            io.to(socket.room.name).emit('draw', currentPlayer.symbol, destinationId);
-
-            console.log('board', socket.room.board);
-            var somebodyWon = checkWinner(socket.room.board, currentPlayer.symbol);
-
-            if (somebodyWon) {
+            if (isWinner(socket.room.board, currentPlayer.symbol)) {
                 io.to(socket.room.name).emit('winner', currentPlayer.symbol);
                 io.to(currentPlayer.id).emit('win', true);
                 io.to(opponent.id).emit('win', false);
@@ -110,6 +107,8 @@ io.on('connection', function(socket) {
                 // leaving game room
                 allClients[socket.room.host.id].leave(socket.room.name);
                 allClients[socket.room.guest.id].leave(socket.room.name);
+            } else if (isDraw(socket.room.board)) {
+                io.to(socket.room.name).emit('draw');
             } else {
                 io.to(currentPlayer.id).emit('switch turn', currentPlayer.canMove);
                 io.to(opponent.id).emit('switch turn', opponent.canMove);
@@ -117,7 +116,7 @@ io.on('connection', function(socket) {
         }
     });
 
-    function checkWinner (board, symbol) {
+    function isWinner (board, symbol) {
         var horizontal = checkIfEqual(board[0], board[1], board[2], symbol) || checkIfEqual(board[3], board[4], board[5], symbol) || checkIfEqual(board[6], board[7], board[8], symbol);
         var vertical = checkIfEqual(board[0], board[3], board[6], symbol) || checkIfEqual(board[1], board[4], board[7], symbol) || checkIfEqual(board[2], board[5], board[8], symbol);
         var cross = checkIfEqual(board[0], board[4], board[8], symbol) || checkIfEqual(board[2], board[4], board[6], symbol);
@@ -125,15 +124,24 @@ io.on('connection', function(socket) {
         return horizontal || vertical || cross;
     }
 
-    function checkIfEqual(a, b, c, symbol) {
+    function checkIfEqual (a, b, c, symbol) {
         return a === b && a === c && a === symbol;
     }
 
-    socket.on('disconnect', function() {
+    function isDraw (board) {
+        return board.indexOf('') === -1;
+    }
+
+    socket.on('disconnect', function () {
+        // todo: check if player was playing with someone and emit to opponent message about that
+
+        if (socket.player && socket.player.inGame) {
+            console.log('Oops, somebody is disconnecting during the game. We should inform his opponent about that!');
+        }
+
         delete players[socket.id];
         delete allClients[socket.id];
 
-        // todo: check if player was playing with someone and emit to opponent message about that
         io.emit('playerList', players);
         io.emit('userCounter', Object.keys(allClients).length);
         console.log('user count:', Object.keys(allClients).length);
@@ -141,7 +149,7 @@ io.on('connection', function(socket) {
     });
 });
 
-server.listen(port, function() {
+server.listen(port, function () {
     console.log('Listening on port', port);
 });
 
@@ -150,12 +158,13 @@ server.listen(port, function() {
 // [X] hide players list when play
 // [X] show only available players on the list
 // [X] win algorythm fix
+// [X] draw support
 // [?] support multiple boards
 // [] leave room and end game when player disconnected
 // [] player name validation
 // [] store game stats in file or DB
 
 // TODO LIST - refactor
-// [] divide server and client into separate files
 // [X] do not pass whole html element through websocket
+// [] divide server and client into separate files
 // [] use react
