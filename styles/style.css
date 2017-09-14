@@ -11,12 +11,10 @@ canvas {
 }
 
 .dont-touch {
-    pointer-events: none;
     cursor: no-drop;
 }
 
 .touchable {
-    pointer-events: auto;
     cursor: pointer;
 }
 

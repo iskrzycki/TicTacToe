@@ -6,7 +6,9 @@
 
     <div class="container-fluid">
         <div class="row margin-top">
-            <div class="well text-center well-sm"><strong>Tic tac toe</strong></div>
+            <div class="well text-center well-sm">
+                <strong>Tic tac toe</strong>
+            </div>
         </div>
         <div class="row">
             <div class="col-md-4"></div>
@@ -24,16 +26,20 @@
             <div class="col-md-4"></div>
         </div>
         <div class="row">
-            <div class="col-md-5">
+            <div class="col-md-4">
             </div>
-            <div class="col-md-5 text-center">
-                <span id="winnerInfo"></span>
+            <div class="col-md-4 text-center">
                 <div id="board">
-                    <span id="roomName"></span>
+                    <div class="well text-center well-sm">
+                        <p id="roomName"></p>
+                        <p id="winnerInfo"></p>
+                        <p id="symbolInfo"></p>
+                        <p id="turnInfo"></p>
+                    </div>
                     <canvas id="myCanvas" width="310" height="310" class="touchable"></canvas>
                 </div>
             </div>
-            <div id="players-panel" class="col-md-2">
+            <div id="players-panel" class="col-md-4">
                 <h2>Player</h2>
                 <ul class="list-group" id="player-list"></ul>
             </div>

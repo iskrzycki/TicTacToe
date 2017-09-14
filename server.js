@@ -1,9 +1,14 @@
+var fs = require('fs')
 var express = require('express');
 var http = require('http');
 var app = express();
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
 var port = 3000;
+
+var logger = fs.createWriteStream('log.txt', {
+  flags: 'a'
+})
 
 var players = {};
 var allClients = {};
@@ -15,6 +20,12 @@ app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
+function logToFile (message) {
+    // todo: uncomment on prod
+    //var curretDate = new Date();
+    //logger.write(curretDate.toUTCString() + '     ' + message + '\r\n');
+}
+
 io.on('connection', function (socket) {
     allClients[socket.id] = socket;
 
@@ -22,6 +33,7 @@ io.on('connection', function (socket) {
     io.emit('playerList', players);
     console.log('user connected', socket.id);
     console.log('user count:', Object.keys(allClients).length);
+    logToFile('user connected ' + socket.id);
 
     socket.on('newPlayer', function (name) {
 
@@ -34,6 +46,7 @@ io.on('connection', function (socket) {
             socket.player = player;
             console.log('New player: ', player.name);
             players[socket.id] = player;
+            io.to(socket.id).emit('player name', player.name);
             io.emit('playerList', players);
         } else {
             io.to(socket.id).emit('error', 'Invalid username');
@@ -42,7 +55,7 @@ io.on('connection', function (socket) {
 
     socket.on('createRoom', function (secondPlayerId) {
         var secondPlayerSocket = io.sockets.sockets[secondPlayerId];
-        var roomName = socket.player.name + " vs " + secondPlayerSocket.player.name;
+        var roomName = socket.player.name + ' vs ' + secondPlayerSocket.player.name;
         console.log('creating room', roomName);
 
         socket.join(roomName);
@@ -75,6 +88,8 @@ io.on('connection', function (socket) {
 
         io.to(socket.id).emit('switch turn', true);
         io.to(secondPlayerSocket.id).emit('switch turn', false);
+        io.to(socket.id).emit('symbol', 'x');
+        io.to(secondPlayerSocket.id).emit('symbol', 'o');
         io.emit('playerList', players);
     });
 
@@ -135,10 +150,8 @@ io.on('connection', function (socket) {
     }
 
     socket.on('disconnect', function () {
-        // todo: check if player was playing with someone and emit to opponent message about that
-
         if (socket.player && socket.player.inGame) {
-            console.log('Oops, somebody is disconnecting during the game. We should inform his opponent about that!');
+            io.to(socket.room.name).emit('disconnected');
         }
 
         delete players[socket.id];
@@ -175,12 +188,14 @@ function validateUserName (userName) {
 // [X] show only available players on the list
 // [X] win algorythm fix
 // [X] draw support
+// [X] info panel - player name, who's turn, player stats
 // [?] support multiple boards
-// [] leave room and end game when player disconnected
 // [?] player name validation (needs to be handled on ui side also)
+// [?] leave room and end game when player disconnected
 // [] store game stats in file or DB
 
 // TODO LIST - refactor
 // [X] do not pass whole html element through websocket
 // [] divide server and client into separate files
 // [] use react
+// [] style info panel better

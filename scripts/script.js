@@ -16,17 +16,20 @@ var CONFIG = {
     O_COLOR: '#00ff00'
 };
 
-document.querySelector("#nameForm").addEventListener("submit", function(e) {
-    // TODO: display players only if no error
+document.querySelector('#nameForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var input = document.getElementById('playerNameInput');
     socket.emit('newPlayer', input.value);
-    playerName = input.value;
-    document.getElementById('nameForm').remove();
-    displayPlayers(true);
 });
 
-elem.addEventListener('click', function(event) {
+socket.on('player name', function (name) {
+    playerName = name;
+    document.getElementById('nameForm').remove();
+    displayPlayers(true);
+    hideError();
+});
+
+elem.addEventListener('click', function (event) {
     elemBounding = elem.getBoundingClientRect();
     var x = event.pageX - elemBounding.left;
     var y = event.pageY - elemBounding.top;
@@ -45,15 +48,16 @@ socket.on('draw symbol', function (data, destinationId) {
     }
 });
 
+// todo: merge winner and draw togoether
 socket.on('winner', function (wonSymbol) {
-    document.getElementById('winnerInfo').innerHTML = wonSymbol + " WON";
+    document.getElementById('winnerInfo').innerHTML = wonSymbol + ' WON';
     displayPlayers(true);
     displayBoard(false);
     drawBoard();
 });
 
 socket.on('draw', function () {
-    document.getElementById('winnerInfo').innerHTML = "DRAW";
+    document.getElementById('winnerInfo').innerHTML = 'DRAW';
     displayPlayers(true);
     displayBoard(false);
     drawBoard();
@@ -61,22 +65,32 @@ socket.on('draw', function () {
 
 socket.on('win', function (youWon) {
     if (youWon) {
-        alert('You won!');
+        console.log('You won!');
     } else {
-        alert('You loose');
+        console.log('You loose!');
     }
+});
+
+socket.on('disconnected', function () {
+    displayErrorMessage('Game ended');
 });
 
 socket.on('switch turn', function (data) {
     if (data === true) {
-        elem.className = "touchable";
+        elem.className = 'touchable';
+        document.getElementById('turnInfo').innerHTML = 'Your turn';
     } else {
-        elem.className = "dont-touch";
+        elem.className = 'dont-touch';
+        document.getElementById('turnInfo').innerHTML = 'Opponent turn';
     }
 });
 
+socket.on('symbol', function (symbol) {
+    document.getElementById('symbolInfo').innerHTML = 'Your symbol: ' + symbol;
+});
+
 socket.on('userCounter', function (count) {
-    document.getElementById('userCounter').innerHTML = "users online: " + count;
+    document.getElementById('userCounter').innerHTML = 'users online: ' + count;
 });
 
 socket.on('error', function (message) {
@@ -84,7 +98,7 @@ socket.on('error', function (message) {
 });
 
 socket.on('startGame', function (roomName) {
-    document.getElementById('winnerInfo').innerHTML = "";
+    document.getElementById('winnerInfo').innerHTML = '';
     displayBoard(true);
     displayPlayers(false);
     document.getElementById('roomName').innerHTML = roomName;
@@ -100,20 +114,20 @@ socket.on('playerList', function (playerList) {
 
     for (var property in playerList) {
         if (playerList.hasOwnProperty(property)) {
-            var li = document.createElement("li");
+            var li = document.createElement('li');
             var text = playerList[property].name;
 
             if (playerList[property].inGame === true) {
-                text += " - in game";
+                text += ' - in game';
             }
 
             li.appendChild(document.createTextNode(text));
-            li.setAttribute("id", playerList[property].id);
+            li.setAttribute('id', playerList[property].id);
             li.className = 'list-group-item touchable';
 
             if (playerName !== playerList[property].name && playerList[property].inGame === false) {
-                li.addEventListener("click", function(e) {
-                    socket.emit('createRoom', e.srcElement.getAttribute("id"));
+                li.addEventListener('click', function(e) {
+                    socket.emit('createRoom', e.srcElement.getAttribute('id'));
                 }, false);
             } else {
                 li.className += ' disabled';
@@ -142,7 +156,7 @@ elements.push({top: 210, left: 0, id: 6, isBlank: true});
 elements.push({top: 210, left: 105, id: 7, isBlank: true});
 elements.push({top: 210, left: 210, id: 8, isBlank: true});
 
-function drawBoard() {
+function drawBoard () {
     elements.forEach(function(element) {
         element.isBlank = true;
         context.fillStyle = CONFIG.BOARD.TILE_COLOR;
@@ -152,7 +166,7 @@ function drawBoard() {
 
 drawBoard();
 
-function drawCircle(id) {
+function drawCircle (id) {
     var element = getGameElementById(id);
     var radius = CONFIG.BOARD.TILE_SIZE / 3;
     var x = element.left + CONFIG.BOARD.TILE_SIZE / 2;
@@ -168,7 +182,7 @@ function drawCircle(id) {
     context.closePath();
 }
 
-function drawX(id) {
+function drawX (id) {
     var element = getGameElementById(id);
     var offset = 20;
 
@@ -188,12 +202,16 @@ function drawX(id) {
 
 window.onbeforeunload = function() {
     // TODO: Uncomment on prod
-    //return "Do you really want to refresh page? You'll be logged out.";
+    //return 'Do you really want to refresh page? You'll be logged out.';
 }
 
 function displayErrorMessage (message) {
     document.getElementById('errorMessage').style.display = 'block';
     document.getElementById('errorMessage').innerHTML = message;
+}
+
+function hideError () {
+    document.getElementById('errorMessage').style.display = 'none';
 }
 
 function displayBoard (isVisible) {
