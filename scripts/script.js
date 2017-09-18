@@ -48,41 +48,23 @@ socket.on('draw symbol', function (data, destinationId) {
     }
 });
 
-// todo: merge winner and draw togoether
-socket.on('winner', function (wonSymbol) {
-    document.getElementById('winnerInfo').innerHTML = wonSymbol + ' WON';
+socket.on('game result', function (wonSymbol) {
+    displayWinnerInfo(true, wonSymbol);
+    displayTurnInfo(false, false);
+});
+
+document.getElementById('btnBack').addEventListener('click', function () {
     displayPlayers(true);
     displayBoard(false);
     drawBoard();
-});
-
-socket.on('draw', function () {
-    document.getElementById('winnerInfo').innerHTML = 'DRAW';
-    displayPlayers(true);
-    displayBoard(false);
-    drawBoard();
-});
-
-socket.on('win', function (youWon) {
-    if (youWon) {
-        console.log('You won!');
-    } else {
-        console.log('You loose!');
-    }
 });
 
 socket.on('disconnected', function () {
     displayErrorMessage('Game ended');
 });
 
-socket.on('switch turn', function (data) {
-    if (data === true) {
-        elem.className = 'touchable';
-        document.getElementById('turnInfo').innerHTML = 'Your turn';
-    } else {
-        elem.className = 'dont-touch';
-        document.getElementById('turnInfo').innerHTML = 'Opponent turn';
-    }
+socket.on('switch turn', function (isYourTurn) {
+    displayTurnInfo(true, isYourTurn);
 });
 
 socket.on('symbol', function (symbol) {
@@ -108,25 +90,25 @@ socket.on('startGame', function (roomName) {
 socket.on('playerList', function (playerList) {
     var ul = document.getElementById('player-list');
 
-    while(ul.firstChild) {
+    while (ul.firstChild) {
         ul.removeChild(ul.firstChild);
     }
 
-    for (var property in playerList) {
-        if (playerList.hasOwnProperty(property)) {
+    for (var player in playerList) {
+        if (playerList.hasOwnProperty(player)) {
             var li = document.createElement('li');
-            var text = playerList[property].name;
+            var text = playerList[player].name;
 
-            if (playerList[property].inGame === true) {
+            if (playerList[player].inGame === true) {
                 text += ' - in game';
             }
 
             li.appendChild(document.createTextNode(text));
-            li.setAttribute('id', playerList[property].id);
+            li.setAttribute('id', playerList[player].id);
             li.className = 'list-group-item touchable';
 
-            if (playerName !== playerList[property].name && playerList[property].inGame === false) {
-                li.addEventListener('click', function(e) {
+            if (playerName !== playerList[player].name && playerList[player].inGame === false) {
+                li.addEventListener('click', function (e) {
                     socket.emit('createRoom', e.srcElement.getAttribute('id'));
                 }, false);
             } else {
@@ -157,7 +139,7 @@ elements.push({top: 210, left: 105, id: 7, isBlank: true});
 elements.push({top: 210, left: 210, id: 8, isBlank: true});
 
 function drawBoard () {
-    elements.forEach(function(element) {
+    elements.forEach(function (element) {
         element.isBlank = true;
         context.fillStyle = CONFIG.BOARD.TILE_COLOR;
         context.fillRect(element.left, element.top, CONFIG.BOARD.TILE_SIZE, CONFIG.BOARD.TILE_SIZE);
@@ -200,7 +182,7 @@ function drawX (id) {
     context.closePath();
 }
 
-window.onbeforeunload = function() {
+window.onbeforeunload = function () {
     // TODO: Uncomment on prod
     //return 'Do you really want to refresh page? You'll be logged out.';
 }
@@ -222,6 +204,29 @@ function displayBoard (isVisible) {
 function displayPlayers (isVisible) {
     var displayStyle = isVisible ? 'block' : 'none';
     document.getElementById('players-panel').style.display = displayStyle;
+}
+
+function displayWinnerInfo (isVisible, whoWon) {
+    var displayStyle = isVisible ? 'block' : 'none';
+    if (whoWon == 'DRAW') {
+        document.getElementById('winnerInfo').innerHTML = 'DRAW';
+    } else {
+        document.getElementById('winnerInfo').innerHTML = whoWon + ' WON';
+    }
+    document.getElementById('winnerInfo').style.display = displayStyle;
+}
+
+function displayTurnInfo (isVisible, isYourTurn) {
+    var displayStyle = isVisible ? 'block' : 'none';
+    document.getElementById('turnInfo').style.display = displayStyle;
+
+    if (isYourTurn) {
+        elem.className = 'touchable';
+        document.getElementById('turnInfo').innerHTML = 'Your turn';
+    } else {
+        elem.className = 'dont-touch';
+        document.getElementById('turnInfo').innerHTML = 'Opponent turn';
+    }
 }
 
 function getGameElementById (id) {

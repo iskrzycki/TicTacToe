@@ -10,6 +10,10 @@ canvas {
     display: none;
 }
 
+#board p {
+    margin: 0px;
+}
+
 .dont-touch {
     cursor: no-drop;
 }
@@ -28,4 +32,8 @@ canvas {
 
 #errorMessage {
 	display: none;
+}
+
+.navbar-fixed-bottom {
+    padding: 15px;
 }

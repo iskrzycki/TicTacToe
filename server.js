@@ -113,9 +113,7 @@ io.on('connection', function (socket) {
             io.to(socket.room.name).emit('draw symbol', currentPlayer.symbol, destinationId);
 
             if (isWinner(socket.room.board, currentPlayer.symbol)) {
-                io.to(socket.room.name).emit('winner', currentPlayer.symbol);
-                io.to(currentPlayer.id).emit('win', true);
-                io.to(opponent.id).emit('win', false);
+                io.to(socket.room.name).emit('game result', currentPlayer.symbol);
 
                 players[socket.room.host.id].inGame = false;
                 players[socket.room.guest.id].inGame = false;
@@ -125,7 +123,7 @@ io.on('connection', function (socket) {
                 allClients[socket.room.host.id].leave(socket.room.name);
                 allClients[socket.room.guest.id].leave(socket.room.name);
             } else if (isDraw(socket.room.board)) {
-                io.to(socket.room.name).emit('draw');
+                io.to(socket.room.name).emit('game result', 'DRAW');
             } else {
                 io.to(currentPlayer.id).emit('switch turn', currentPlayer.canMove);
                 io.to(opponent.id).emit('switch turn', opponent.canMove);
@@ -193,9 +191,12 @@ function validateUserName (userName) {
 // [?] player name validation (needs to be handled on ui side also)
 // [?] leave room and end game when player disconnected
 // [] store game stats in file or DB
+// [] draw line when somebody won
+// [] allow user to return to player list
+// [] allow user to exit game
 
 // TODO LIST - refactor
 // [X] do not pass whole html element through websocket
 // [] divide server and client into separate files
 // [] use react
-// [] style info panel better
+// [] style info panel better (your symbol...)
