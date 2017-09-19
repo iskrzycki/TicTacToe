@@ -131,6 +131,10 @@ io.on('connection', function (socket) {
         }
     });
 
+    socket.on('leaveGame', function () {
+        console.log('socket wants to leave game');
+    });
+    
     function isWinner (board, symbol) {
         var horizontal = checkIfEqual(board[0], board[1], board[2], symbol) || checkIfEqual(board[3], board[4], board[5], symbol) || checkIfEqual(board[6], board[7], board[8], symbol);
         var vertical = checkIfEqual(board[0], board[3], board[6], symbol) || checkIfEqual(board[1], board[4], board[7], symbol) || checkIfEqual(board[2], board[5], board[8], symbol);

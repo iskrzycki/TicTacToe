@@ -53,10 +53,8 @@ socket.on('game result', function (wonSymbol) {
     displayTurnInfo(false, false);
 });
 
-document.getElementById('btnBack').addEventListener('click', function () {
-    displayPlayers(true);
-    displayBoard(false);
-    drawBoard();
+document.getElementById('btnLeave').addEventListener('click', function () {
+    socket.emit('leaveGame');
 });
 
 socket.on('disconnected', function () {
