@@ -7,6 +7,7 @@ var elements = [];
 var moveNumber = 0;
 var playerName;
 
+
 var CONFIG = {
     BOARD: {
         TILE_SIZE: 100,
@@ -15,6 +16,11 @@ var CONFIG = {
     X_COLOR: '#ff0000',
     O_COLOR: '#00ff00'
 };
+
+var ELEMENTS = {
+    SYMBOL_INFO: document.getElementById('symbolInfo'),
+    USER_COUNTER: document.getElementById('userCounter')
+}
 
 document.querySelector('#nameForm').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -55,6 +61,10 @@ socket.on('game result', function (wonSymbol) {
 
 document.getElementById('btnLeave').addEventListener('click', function () {
     socket.emit('leaveGame');
+    displayWinnerInfo(false);
+    displayTurnInfo(false, false);
+    displayBoard(false);
+    displayPlayers(true);
 });
 
 socket.on('disconnected', function () {
@@ -66,11 +76,13 @@ socket.on('switch turn', function (isYourTurn) {
 });
 
 socket.on('symbol', function (symbol) {
-    document.getElementById('symbolInfo').innerHTML = 'Your symbol: ' + symbol;
+    ELEMENTS.SYMBOL_INFO.innerHTML = 'Your symbol: ' + symbol;
+    //document.getElementById('symbolInfo').innerHTML = 'Your symbol: ' + symbol;
 });
 
 socket.on('userCounter', function (count) {
-    document.getElementById('userCounter').innerHTML = 'users online: ' + count;
+    // document.getElementById('userCounter').innerHTML = 'users online: ' + count;
+    ELEMENTS.USER_COUNTER.innerHTML = 'users online: ' + count;
 });
 
 socket.on('error', function (message) {
@@ -196,6 +208,9 @@ function hideError () {
 
 function displayBoard (isVisible) {
     var displayStyle = isVisible ? 'block' : 'none';
+    if (isVisible === true) {
+        drawBoard();
+    }
     document.getElementById('board').style.display = displayStyle;
 }
 
@@ -206,12 +221,22 @@ function displayPlayers (isVisible) {
 
 function displayWinnerInfo (isVisible, whoWon) {
     var displayStyle = isVisible ? 'block' : 'none';
-    if (whoWon == 'DRAW') {
-        document.getElementById('winnerInfo').innerHTML = 'DRAW';
-    } else {
-        document.getElementById('winnerInfo').innerHTML = whoWon + ' WON';
-    }
     document.getElementById('winnerInfo').style.display = displayStyle;
+    if (isVisible === false) {
+        return;
+    }
+
+    switch (whoWon) {
+        case 'DRAW':
+            document.getElementById('winnerInfo').innerHTML = 'DRAW';
+            break;
+        case 'x':
+        case 'o':
+            document.getElementById('winnerInfo').innerHTML = whoWon + ' WON';
+            break;
+        default:
+            document.getElementById('winnerInfo').innerHTML = '';
+    }
 }
 
 function displayTurnInfo (isVisible, isYourTurn) {

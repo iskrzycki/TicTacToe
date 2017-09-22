@@ -115,13 +115,15 @@ io.on('connection', function (socket) {
             if (isWinner(socket.room.board, currentPlayer.symbol)) {
                 io.to(socket.room.name).emit('game result', currentPlayer.symbol);
 
-                players[socket.room.host.id].inGame = false;
-                players[socket.room.guest.id].inGame = false;
-                io.emit('playerList', players);
+                // not necessary ?
+                // players[socket.room.host.id].inGame = false;
+                // players[socket.room.guest.id].inGame = false;
+                // io.emit('playerList', players);
 
-                // leaving game room
-                allClients[socket.room.host.id].leave(socket.room.name);
-                allClients[socket.room.guest.id].leave(socket.room.name);
+                // // leaving game room
+                // allClients[socket.room.host.id].leave(socket.room.name);
+                // allClients[socket.room.guest.id].leave(socket.room.name);
+
             } else if (isDraw(socket.room.board)) {
                 io.to(socket.room.name).emit('game result', 'DRAW');
             } else {
@@ -132,8 +134,15 @@ io.on('connection', function (socket) {
     });
 
     socket.on('leaveGame', function () {
-        console.log('socket wants to leave game');
+        leaveGame(socket);
     });
+
+    function leaveGame (socket) {
+        players[socket.id].inGame = false;
+        allClients[socket.id].leave(socket.room.name);
+        io.to(socket.room.name).emit('disconnected');
+        io.emit('playerList', players);
+    }
     
     function isWinner (board, symbol) {
         var horizontal = checkIfEqual(board[0], board[1], board[2], symbol) || checkIfEqual(board[3], board[4], board[5], symbol) || checkIfEqual(board[6], board[7], board[8], symbol);
@@ -204,3 +213,6 @@ function validateUserName (userName) {
 // [] divide server and client into separate files
 // [] use react
 // [] style info panel better (your symbol...)
+// [] make array of html elements to avoid calling getElementById multiple times
+// [] make array of "UI states"
+// [] fix issue when player ends first game and starts another
