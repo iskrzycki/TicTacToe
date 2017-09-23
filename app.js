@@ -196,7 +196,7 @@ function validateUserName (userName) {
 // [X] support multiple boards
 // [X] leave room and end game when player disconnected
 // [X] allow user to leave game
-// [?] player name validation (needs to be handled on ui side also)
+// [X] player name validation
 // [] store game stats in file or DB
 // [] draw line when somebody won
 
