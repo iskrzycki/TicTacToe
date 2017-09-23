@@ -205,14 +205,13 @@ function validateUserName (userName) {
 // [?] leave room and end game when player disconnected
 // [] store game stats in file or DB
 // [] draw line when somebody won
-// [] allow user to return to player list
-// [] allow user to exit game
+// [] allow user to leave game
 
 // TODO LIST - refactor
 // [X] do not pass whole html element through websocket
+// [X] make array of html elements to avoid calling getElementById multiple times
 // [] divide server and client into separate files
 // [] use react
 // [] style info panel better (your symbol...)
-// [] make array of html elements to avoid calling getElementById multiple times
 // [] make array of "UI states"
 // [] fix issue when player ends first game and starts another

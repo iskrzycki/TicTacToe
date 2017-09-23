@@ -41,7 +41,7 @@ socket.on('player name', function (name) {
     playerName = name;
     ELEMENTS.PLAYER_FORM.remove();
     displayPlayers(true);
-    hideError();
+    displayErrorMessage(false);
 });
 
 ELEMENTS.CANVAS.addEventListener('click', function (event) {
@@ -74,10 +74,12 @@ ELEMENTS.BUTTON_LEAVE.addEventListener('click', function () {
     displayTurnInfo(false, false);
     displayBoard(false);
     displayPlayers(true);
+    displayErrorMessage(false);
+    displayButtonLeave(false);
 });
 
 socket.on('disconnected', function () {
-    displayErrorMessage('Game ended');
+    displayErrorMessage(true, 'Game ended');
 });
 
 socket.on('switch turn', function (isYourTurn) {
@@ -101,7 +103,7 @@ socket.on('startGame', function (roomName) {
     displayBoard(true);
     displayPlayers(false);
     ELEMENTS.ROOM_NAME.innerHTML = roomName;
-    console.log('start game');
+    displayButtonLeave(true);
 });
 
 socket.on('playerList', function (playerList) {
@@ -204,26 +206,26 @@ window.onbeforeunload = function () {
     //return 'Do you really want to refresh page? You'll be logged out.';
 }
 
-function displayErrorMessage (message) {
-    ELEMENTS.ERROR_MESSAGE.style.display = 'block';
+function displayErrorMessage (isVisible, message) {
+    var displayStyle = isVisible ? 'block' : 'none';
+    ELEMENTS.ERROR_MESSAGE.style.display = displayStyle;
     ELEMENTS.ERROR_MESSAGE.innerHTML = message;
-}
-
-function hideError () {
-    ELEMENTS.ERROR_MESSAGE.style.display = 'none';
 }
 
 function displayBoard (isVisible) {
     var displayStyle = isVisible ? 'block' : 'none';
-    if (isVisible === true) {
-        drawBoard();
-    }
     ELEMENTS.BOARD.style.display = displayStyle;
+    drawBoard();
 }
 
 function displayPlayers (isVisible) {
     var displayStyle = isVisible ? 'block' : 'none';
     ELEMENTS.PLAYERS_PANEL.style.display = displayStyle;
+}
+
+function displayButtonLeave (isVisible) {
+    var displayStyle = isVisible ? 'block' : 'none';
+    ELEMENTS.BUTTON_LEAVE.style.display = displayStyle;
 }
 
 function displayWinnerInfo (isVisible, whoWon) {
