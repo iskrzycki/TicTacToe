@@ -95,7 +95,7 @@ socket.on('userCounter', function (count) {
 });
 
 socket.on('error', function (message) {
-    displayErrorMessage(message);
+    displayErrorMessage(true, message);
 });
 
 socket.on('startGame', function (roomName) {

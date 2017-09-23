@@ -1,4 +1,5 @@
 var fs = require('fs')
+var path = require('path')
 var express = require('express');
 var http = require('http');
 var app = express();
@@ -15,6 +16,7 @@ var allClients = {};
 
 app.use('/scripts', express.static(__dirname + '/scripts'));
 app.use('/styles', express.static(__dirname + '/styles'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
@@ -42,7 +44,7 @@ io.on('connection', function (socket) {
                 name: name,
                 id: socket.id,
                 inGame: false
-            }
+            };
             socket.player = player;
             console.log('New player: ', player.name);
             players[socket.id] = player;
