@@ -115,15 +115,6 @@ io.on('connection', function (socket) {
             if (isWinner(socket.room.board, currentPlayer.symbol)) {
                 io.to(socket.room.name).emit('game result', currentPlayer.symbol);
 
-                // not necessary ?
-                // players[socket.room.host.id].inGame = false;
-                // players[socket.room.guest.id].inGame = false;
-                // io.emit('playerList', players);
-
-                // // leaving game room
-                // allClients[socket.room.host.id].leave(socket.room.name);
-                // allClients[socket.room.guest.id].leave(socket.room.name);
-
             } else if (isDraw(socket.room.board)) {
                 io.to(socket.room.name).emit('game result', 'DRAW');
             } else {
@@ -200,18 +191,18 @@ function validateUserName (userName) {
 // [X] win algorythm fix
 // [X] draw support
 // [X] info panel - player name, who's turn, player stats
-// [?] support multiple boards
+// [X] support multiple boards
+// [X] leave room and end game when player disconnected
+// [X] allow user to leave game
 // [?] player name validation (needs to be handled on ui side also)
-// [?] leave room and end game when player disconnected
 // [] store game stats in file or DB
 // [] draw line when somebody won
-// [] allow user to leave game
 
 // TODO LIST - refactor
 // [X] do not pass whole html element through websocket
 // [X] make array of html elements to avoid calling getElementById multiple times
+// [X] fix issue when player ends first game and starts another
 // [] divide server and client into separate files
 // [] use react
 // [] style info panel better (your symbol...)
 // [] make array of "UI states"
-// [] fix issue when player ends first game and starts another
