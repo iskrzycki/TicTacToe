@@ -1,12 +1,8 @@
 var socket = io();
-
-var elem = document.getElementById('myCanvas');
-var context = elem.getContext('2d');
 var elemBounding;
 var elements = [];
 var moveNumber = 0;
 var playerName;
-
 
 var CONFIG = {
     BOARD: {
@@ -19,24 +15,37 @@ var CONFIG = {
 
 var ELEMENTS = {
     SYMBOL_INFO: document.getElementById('symbolInfo'),
-    USER_COUNTER: document.getElementById('userCounter')
-}
+    USER_COUNTER: document.getElementById('userCounter'),
+    CANVAS: document.getElementById('myCanvas'),
+    PLAYER_INPUT: document.getElementById('playerNameInput'),
+    PLAYER_FORM: document.getElementById('nameForm'),
+    WINNER_INFO: document.getElementById('winnerInfo'),
+    ROOM_NAME: document.getElementById('roomName'),
+    BUTTON_LEAVE: document.getElementById('btnLeave'),
+    ERROR_MESSAGE: document.getElementById('errorMessage'),
+    PLAYER_LIST: document.getElementById('player-list'),
+    TURN_INFO: document.getElementById('turnInfo'),
+    BOARD: document.getElementById('board'),
+    PLAYERS_PANEL: document.getElementById('players-panel'),
+    NAME_FORM: document.getElementById('nameForm')
+};
 
-document.querySelector('#nameForm').addEventListener('submit', function (e) {
+var context = ELEMENTS.CANVAS.getContext('2d');
+
+ELEMENTS.NAME_FORM.addEventListener('submit', function (e) {
     e.preventDefault();
-    var input = document.getElementById('playerNameInput');
-    socket.emit('newPlayer', input.value);
+    socket.emit('newPlayer', ELEMENTS.PLAYER_INPUT.value);
 });
 
 socket.on('player name', function (name) {
     playerName = name;
-    document.getElementById('nameForm').remove();
+    ELEMENTS.PLAYER_FORM.remove();
     displayPlayers(true);
     hideError();
 });
 
-elem.addEventListener('click', function (event) {
-    elemBounding = elem.getBoundingClientRect();
+ELEMENTS.CANVAS.addEventListener('click', function (event) {
+    elemBounding = ELEMENTS.CANVAS.getBoundingClientRect();
     var x = event.pageX - elemBounding.left;
     var y = event.pageY - elemBounding.top;
 
@@ -59,7 +68,7 @@ socket.on('game result', function (wonSymbol) {
     displayTurnInfo(false, false);
 });
 
-document.getElementById('btnLeave').addEventListener('click', function () {
+ELEMENTS.BUTTON_LEAVE.addEventListener('click', function () {
     socket.emit('leaveGame');
     displayWinnerInfo(false);
     displayTurnInfo(false, false);
@@ -77,11 +86,9 @@ socket.on('switch turn', function (isYourTurn) {
 
 socket.on('symbol', function (symbol) {
     ELEMENTS.SYMBOL_INFO.innerHTML = 'Your symbol: ' + symbol;
-    //document.getElementById('symbolInfo').innerHTML = 'Your symbol: ' + symbol;
 });
 
 socket.on('userCounter', function (count) {
-    // document.getElementById('userCounter').innerHTML = 'users online: ' + count;
     ELEMENTS.USER_COUNTER.innerHTML = 'users online: ' + count;
 });
 
@@ -90,15 +97,15 @@ socket.on('error', function (message) {
 });
 
 socket.on('startGame', function (roomName) {
-    document.getElementById('winnerInfo').innerHTML = '';
+    ELEMENTS.WINNER_INFO.innerHTML = '';
     displayBoard(true);
     displayPlayers(false);
-    document.getElementById('roomName').innerHTML = roomName;
+    ELEMENTS.ROOM_NAME.innerHTML = roomName;
     console.log('start game');
 });
 
 socket.on('playerList', function (playerList) {
-    var ul = document.getElementById('player-list');
+    var ul = ELEMENTS.PLAYER_LIST;
 
     while (ul.firstChild) {
         ul.removeChild(ul.firstChild);
@@ -198,12 +205,12 @@ window.onbeforeunload = function () {
 }
 
 function displayErrorMessage (message) {
-    document.getElementById('errorMessage').style.display = 'block';
-    document.getElementById('errorMessage').innerHTML = message;
+    ELEMENTS.ERROR_MESSAGE.style.display = 'block';
+    ELEMENTS.ERROR_MESSAGE.innerHTML = message;
 }
 
 function hideError () {
-    document.getElementById('errorMessage').style.display = 'none';
+    ELEMENTS.ERROR_MESSAGE.style.display = 'none';
 }
 
 function displayBoard (isVisible) {
@@ -211,44 +218,44 @@ function displayBoard (isVisible) {
     if (isVisible === true) {
         drawBoard();
     }
-    document.getElementById('board').style.display = displayStyle;
+    ELEMENTS.BOARD.style.display = displayStyle;
 }
 
 function displayPlayers (isVisible) {
     var displayStyle = isVisible ? 'block' : 'none';
-    document.getElementById('players-panel').style.display = displayStyle;
+    ELEMENTS.PLAYERS_PANEL.style.display = displayStyle;
 }
 
 function displayWinnerInfo (isVisible, whoWon) {
     var displayStyle = isVisible ? 'block' : 'none';
-    document.getElementById('winnerInfo').style.display = displayStyle;
+    ELEMENTS.WINNER_INFO.style.display = displayStyle;
     if (isVisible === false) {
         return;
     }
 
     switch (whoWon) {
         case 'DRAW':
-            document.getElementById('winnerInfo').innerHTML = 'DRAW';
+            ELEMENTS.WINNER_INFO.innerHTML = 'DRAW';
             break;
         case 'x':
         case 'o':
-            document.getElementById('winnerInfo').innerHTML = whoWon + ' WON';
+            ELEMENTS.WINNER_INFO.innerHTML = whoWon + ' WON';
             break;
         default:
-            document.getElementById('winnerInfo').innerHTML = '';
+            ELEMENTS.WINNER_INFO.innerHTML = '';
     }
 }
 
 function displayTurnInfo (isVisible, isYourTurn) {
     var displayStyle = isVisible ? 'block' : 'none';
-    document.getElementById('turnInfo').style.display = displayStyle;
+    ELEMENTS.TURN_INFO.style.display = displayStyle;
 
     if (isYourTurn) {
-        elem.className = 'touchable';
-        document.getElementById('turnInfo').innerHTML = 'Your turn';
+        ELEMENTS.CANVAS.className = 'touchable';
+        ELEMENTS.TURN_INFO.innerHTML = 'Your turn';
     } else {
-        elem.className = 'dont-touch';
-        document.getElementById('turnInfo').innerHTML = 'Opponent turn';
+        ELEMENTS.CANVAS.className = 'dont-touch';
+        ELEMENTS.TURN_INFO.innerHTML = 'Opponent turn';
     }
 }
 
